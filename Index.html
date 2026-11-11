@@ -2,147 +2,175 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Parámetros de Sistemas</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Gestor de Conexiones MobaXterm</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+        .filtros-container { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; }
+        .filtro-grupo { display: flex; flex-direction: column; }
+        .filtro-grupo label { font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #333; }
+        .filtro-grupo select, .filtro-grupo input { padding: 6px; font-size: 14px; min-width: 150px; border: 1px solid #ccc; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #0078D7; color: white; }
+        .btn-conectar { background-color: #28a745; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; }
+        .btn-conectar:hover { background-color: #218838; }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen flex flex-col">
+<body>
 
-    <!-- Header -->
-    <header class="bg-indigo-600 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-            <h1 class="text-2xl font-bold tracking-tight">Panel de Consulta de Sistemas</h1>
-            <p class="text-indigo-200 text-sm mt-1">Arquitectura Separada (HTML, JS, PHP & MySQL)</p>
+    <h2>Panel de Conexiones a Servidores</h2>
+    
+    <!-- Contenedor de Filtros -->
+    <div class="filtros-container">
+        <div class="filtro-grupo">
+            <label for="filtroMaquina">Máquina:</label>
+            <input type="text" id="filtroMaquina" placeholder="Filtrar máquina..." oninput="eventoFiltroConRetardo()">
         </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 flex-grow w-full">
-        
-        <!-- Search Box Section -->
-        <div id="searchSection" class="max-w-2xl mx-auto text-center transition-all duration-300">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">¿Qué elemento deseas consultar?</h2>
-            <form onsubmit="handleSearch(event)" class="flex gap-2">
-                <div class="relative flex-grow">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" id="searchInput" placeholder="Ej. SRV-APP-01, Hacienda, Oracle..." 
-                           class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-base">
-                </div>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-lg shadow-sm transition-colors">
-                    Buscar
-                </button>
-            </form>
-            <p class="text-xs text-gray-400 mt-2">Introduce un valor para consultar la base de datos en tiempo real.</p>
+        <div class="filtro-grupo">
+            <label for="filtroAplicacion">Aplicación:</label>
+            <input type="text" id="filtroAplicacion" placeholder="Filtrar aplicación..." oninput="eventoFiltroConRetardo()">
         </div>
-
-        <!-- Results Container (Hidden initially) -->
-        <div id="resultsContainer" class="hidden mt-8">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-gray-800">Resultados para: "<span id="queryText" class="font-semibold text-indigo-600"></span>"</h3>
-                <button onclick="resetSearch()" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Nueva búsqueda</button>
-            </div>
-
-            <div class="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Máquina</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aplicación</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organismo</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Servidores Relacionados</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bases de Datos Relacionadas</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody" class="bg-white divide-y divide-gray-200 text-sm">
-                            <!-- Los resultados se inyectarán aquí -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Mensaje si no hay resultados -->
-            <div id="noResults" class="hidden text-center py-12 bg-white rounded-lg border border-gray-200 mt-4">
-                <p class="text-gray-500">No se encontraron registros en la base de datos para este criterio.</p>
-            </div>
+        <div class="filtro-grupo">
+            <label for="filtroEntorno">Entorno:</label>
+            <select id="filtroEntorno" onchange="filtrarTabla()">
+                <option value="">-- Todos --</option>
+            </select>
         </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-auto py-4">
-        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500">
-            Sistema de Consulta Interna &mdash; Todos los derechos reservados
+        <div class="filtro-grupo">
+            <label for="filtroEmpresa">Empresa:</label>
+            <select id="filtroEmpresa" onchange="filtrarTabla()">
+                <option value="">-- Todas --</option>
+            </select>
         </div>
-    </footer>
+    </div>
 
-    <!-- JavaScript -->
+    <!-- Tabla -->
+    <table id="tablaServidores">
+        <thead>
+            <tr>
+                <th>MÁQUINA</th>
+                <th>APLICACIÓN</th>
+                <th>ENTORNO</th>
+                <th>EMPRESA</th>
+                <th>CONECTAR</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla">
+            <!-- Datos dinámicos -->
+        </tbody>
+    </table>
+
     <script>
-        async function handleSearch(event) {
-            event.preventDefault(); 
-            const query = document.getElementById('searchInput').value.trim();
-            
-            if (query === "") return;
+        const usuarioSalto = "admin_salto";
+        const ipSalto = "192.168.100.10";
+        const usuarioDestino = "usuario";
 
+        let todosLosServidores = [];
+        let temporizador = null;
+
+        async function cargarDatos() {
             try {
-                // Realiza la petición al archivo buscar.php separado
-                const response = await fetch(`buscar.php?q=${encodeURIComponent(query)}`);
-                const results = await response.json();
+                // Las peticiones a emp1.json y emp2.json se ven en verde (200 OK) correctamente
+                const [resEmp1, resEmp2] = await Promise.all([
+                    fetch('data/emp1.json'),
+                    fetch('data/emp2.json')
+                ]);
 
-                renderResults(query, results);
+                const datosEmp1 = await resEmp1.json();
+                const datosEmp2 = await resEmp2.json();
+
+                todosLosServidores = [...datosEmp1, ...datosEmp2];
+                
+                poblarSelects(todosLosServidores);
+                renderizarTabla(todosLosServidores);
+
             } catch (error) {
-                console.error("Error al consultar la base de datos:", error);
-                alert("Ocurrió un error al realizar la búsqueda.");
+                console.error("Error al cargar los datos:", error);
             }
         }
 
-        function renderResults(query, results) {
-            document.getElementById('queryText').textContent = query;
-            document.getElementById('resultsContainer').classList.remove('hidden');
-            
-            const tbody = document.getElementById('tableBody');
-            const noResults = document.getElementById('noResults');
-            tbody.innerHTML = '';
+        function poblarSelects(datos) {
+            const entornos = [...new Set(datos.map(item => item.entorno))].sort();
+            const empresas = [...new Set(datos.map(item => item.empresa))].sort();
 
-            if (results.length === 0) {
-                noResults.classList.remove('hidden');
-            } else {
-                noResults.classList.add('hidden');
-                results.forEach(item => {
-                    const row = `
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${escapeHtml(item.maquina)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-700">${escapeHtml(item.aplicacion)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-700">${escapeHtml(item.organismo)}</td>
-                            <td class="px-6 py-4 text-gray-700">${escapeHtml(item.servidores)}</td>
-                            <td class="px-6 py-4 text-gray-700">${escapeHtml(item.bases_datos)}</td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
+            const selectEntorno = document.getElementById('filtroEntorno');
+            const selectEmpresa = document.getElementById('filtroEmpresa');
+
+            entornos.forEach(e => {
+                let opt = document.createElement('option');
+                opt.value = e;
+                opt.textContent = e;
+                selectEntorno.appendChild(opt);
+            });
+
+            empresas.forEach(emp => {
+                let opt = document.createElement('option');
+                opt.value = emp;
+                opt.textContent = emp;
+                selectEmpresa.appendChild(opt);
+            });
+        }
+
+        function renderizarTabla(datos) {
+            const tbody = document.getElementById('cuerpoTabla');
+            tbody.innerHTML = "";
+
+            if (datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No se encontraron resultados.</td></tr>`;
+                return;
             }
+
+            let filasHTML = "";
+            datos.forEach(item => {
+                let urlMoba = "";
+
+                if (item.empresa === "EMP2") {
+                    let comandoSSH = `ssh ${usuarioDestino}@${item.maquina} -o ProxyCommand="ssh -W %h:%p ${usuarioSalto}@${ipSalto}"`;
+                    urlMoba = `moba://${encodeURIComponent(comandoSSH)}`;
+                } else {
+                    urlMoba = `moba://${usuarioDestino}@${item.maquina}`;
+                }
+
+                filasHTML += `
+                    <tr>
+                        <td>${item.maquina}</td>
+                        <td>${item.aplicacion}</td>
+                        <td>${item.entorno}</td>
+                        <td>${item.empresa}</td>
+                        <td><a href="${urlMoba}" class="btn-conectar">CONECTAR</a></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = filasHTML;
         }
 
-        function resetSearch() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('resultsContainer').classList.add('hidden');
-            document.getElementById('searchInput').focus();
+        // Función con retardo (Debounce) para evitar saturar el WebSocket de Live Server al escribir
+        function eventoFiltroConRetardo() {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => {
+                filtrarTabla();
+            }, 300); // Espera 300 milisegundos tras dejar de escribir para filtrar
         }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        function filtrarTabla() {
+            const maquina = document.getElementById('filtroMaquina').value.toLowerCase().trim();
+            const aplicacion = document.getElementById('filtroAplicacion').value.toLowerCase().trim();
+            const entorno = document.getElementById('filtroEntorno').value;
+            const empresa = document.getElementById('filtroEmpresa').value;
+
+            const filtrados = todosLosServidores.filter(item => {
+                const matchMaquina = item.maquina.toLowerCase().includes(maquina);
+                const matchApp = item.aplicacion.toLowerCase().includes(aplicacion);
+                const matchEntorno = (entorno === "" || item.entorno === entorno);
+                const matchEmpresa = (empresa === "" || item.empresa === empresa);
+
+                return matchMaquina && matchApp && matchEntorno && matchEmpresa;
+            });
+
+            renderizarTabla(filtrados);
         }
+
+        window.onload = cargarDatos;
     </script>
 </body>
 </html>

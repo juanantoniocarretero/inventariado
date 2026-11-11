@@ -1,0 +1,4 @@
+[
+  { "maquina": "sv1", "aplicacion": "ap1", "entorno": "PRO", "empresa": "EMP1" },
+  { "maquina": "sv3", "aplicacion": "ap3", "entorno": "DES", "empresa": "EMP1" }
+]
